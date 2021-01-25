@@ -145,4 +145,8 @@ def switch():
                 cmds.parent(ctrlList[2],ctrlList[1])
                 cmds.parent(ctrlList[1],ctrlList[0])
                 del ctrlList[:]
-            
+          
+        
+        
+        
+#fsds
