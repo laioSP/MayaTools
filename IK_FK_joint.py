@@ -1,57 +1,79 @@
 import maya.cmds as cmds
 
-jointList=[]
-def counter(): return len(cmds.ls("mainGroup*",type='locator'))
+jointList=[];locators=[]
+jointsAmount=7
+def counter(): return len(cmds.ls("bonesGrp*")); 
+
+def getLocation():
+    locations=[]
+    temp=[]
+    deliver=[]
+    for x in locators:
+        print x
+        cl=cmds.getAttr(x+".translate")[0]
+        locations.append(cl)
+    start=locations[0];end=locations[1]
+    for d in range(len(end)):
+        ref=end[d]/jointsAmount
+        for f in range(jointsAmount*3):
+            final=ref*f+start[d]       
+            temp.append(final)
+            if len(temp) == 3:
+                print temp
+                deliver.append((temp[0],temp[1],temp[2]))
+                del temp[:]    
+    return deliver
+
 def getNames():
+    locations=getLocation()
     currentAmount=str(counter())
-    jointNames=[
-    ("sbJoint1_"+currentAmount,"IKJoint1_"+currentAmount,"FKJoint1_"+currentAmount,(0, 0, 5)),
-    ("sbJoint2_"+currentAmount,"IKJoint2_"+currentAmount,"FKJoint2_"+currentAmount,(0, 0, 0)),
-    ("sbJoint3_"+currentAmount,"IKJoint3_"+currentAmount,"FKJoint3_"+currentAmount,(0, 0,-5))]
+    jointNames=[]
+    for x in range(jointsAmount):
+        jointNames.append(("sbJoint"+str(x)+"_"+currentAmount,"IKJoint"+str(x)+"_"+currentAmount,"FKJoint"+str(x)+"_"+currentAmount,locations[x]))
     return jointNames
 
 def createbones():
-    firstJoints=[];secondJoints=[];thirdJoints=[];locators=[];averagePosition=[]
-    jointNames=getNames()
-    for x in range(3):
-        averagePosition.append((jointNames[1][3][x]+jointNames[1][3][x]+jointNames[1][3][x])/3)
-    mainGroup=cmds.spaceLocator(p=(averagePosition),n="mainGroup")
-    del averagePosition[:]
-    cmds.setAttr(mainGroup[0]+".translateY",4 )
-    cmds.xform(cp=True)
-    cmds.makeIdentity(mainGroup,apply=True, t=1,r=1,s=1,n=0,pn=1)
-
+    sbJoints=[];ikJoints=[];fkJoints=[]
+    jointNames=getNames()    
+    mainGroup=cmds.group(em=True, n="bonesGrp")
     for x in jointNames:
-
-        loc=cmds.spaceLocator(n="loc"+x[1],p=x[3],a=True)
-
-        cmds.setAttr("loc"+x[1]+".translateY",1 )
-        cmds.xform(cp=True)
-        cmds.parent(loc[0],mainGroup)
-        locators.append(loc)
         for y in x:
-            if y != x[3]:
+            if y != x[-1]:              
                 cmds.select(clear=True)
                 j=cmds.joint(n=y,p=x[3])
-                cmds.parent(j,mainGroup)
-                if y in jointNames[0]:
-                    firstJoints.append(j)
-                if y in jointNames[1]:
-                    secondJoints.append(j)
-                if y in jointNames[2]:
-                    thirdJoints.append(j)              
+                cmds.parent(j,mainGroup) 
+                if y == x[0]:
+                    sbJoints.append(y)
+                if y in x[1]:
+                    ikJoints.append(y)
+                if y in x[2]:
+                    fkJoints.append(y)
                               
-    jointSet=zip(firstJoints,secondJoints,thirdJoints)        
-    for x in range(len(jointNames)):
-        cmds.parent(thirdJoints[x],secondJoints[x])
-        cmds.parent(secondJoints[x],firstJoints[x])
-        cmds.parentConstraint(locators[0],firstJoints[x],mo=True)
-        cmds.parentConstraint(locators[1],secondJoints[x],mo=True)
-        cmds.parentConstraint(locators[2],thirdJoints[x],mo=True)
+    jointSet=zip(sbJoints,ikJoints,fkJoints)        
+    for x in range(len(jointNames)):      
+        if jointNames[x] != jointNames[-1]:
+            cmds.parent(fkJoints[x+1],fkJoints[x])
+            cmds.parent(ikJoints[x+1],ikJoints[x])
+            cmds.parent(sbJoints[x+1],sbJoints[x])
+        
     cmds.select(clear=True)
     jointList.append(jointSet)
     return jointSet
-
+    
+def locator():
+    del locators[:]
+    def create(name):
+        loc=cmds.spaceLocator(n=name+"_locator_"+str(counter()))
+        annotation=cmds.annotate(loc,tx=name,p=(1,1,1))
+        cmds.setAttr(annotation+".template",1)
+        cmds.parent(annotation,loc)
+        return loc
+    start=create("start")[0]
+    end=create("end")[0]
+    cmds.setAttr(start+".translateX",5)
+    locators.append(start)
+    locators.append(end) 
+    
 def buildSlider(sliderWidth,sliderHeight,slideGroupName):
  
     SliderName=slideGroupName+'Ctrl'
@@ -108,18 +130,19 @@ def buildSlider(sliderWidth,sliderHeight,slideGroupName):
     return sliderGroup
 
 def switch():
+    currentAmount=str(counter())
     ctrlList=[]
-    IKctrlGrp=cmds.group(n="IKctrlgrp",em=True)
-    FKctrlGrp=cmds.group(n="FKctrlgrp",em=True)
-    ctrlGrp=cmds.group(n="ctrlgrp")
+    IKctrlGrp=cmds.group(n="IKctrlgrp"+currentAmount,em=True)
+    FKctrlGrp=cmds.group(n="FKctrlgrp"+currentAmount,em=True)
+    ctrlGrp=cmds.group(n="ctrlgrp"+currentAmount)
     cmds.parent(IKctrlGrp,ctrlGrp)
     
     for x in jointList:
-    
+        print x
         slider=buildSlider(1,1,"ik_fk"+x[0][0][-2:]+"_")
         cmds.matchTransform(slider,x[0][0])
         getZ=cmds.getAttr(slider+".translateZ")
-        cmds.setAttr(slider+".translateZ",getZ+3)
+        cmds.setAttr(slider+".translateX",getZ+3)
         sliderCharacters=cmds.ls(slider,dag=1)[7]
         cmds.setAttr(sliderCharacters+".scaleX",5)
         cmds.setAttr(sliderCharacters+".scaleY",5)
@@ -127,9 +150,8 @@ def switch():
         rangeNode=cmds.listConnections(slider+"Ctrl")[0]
         cmds.parent(slider,ctrlGrp)   
       
-        for S in range(len(x)):
-            
-            ikBones=x[1][S] ;fkBones=x[2][S] ;skinnedBones=x[0][S]       
+        for j in x:            
+            ikBones=j[1] ;fkBones=j[2] ;skinnedBones=j[0]
             switch=cmds.createNode('blendColors')
             cmds.connectAttr(rangeNode+".outValueX",switch+".blender")
             cmds.connectAttr(ikBones+".rotate",switch+".color2")
@@ -141,12 +163,7 @@ def switch():
             cmds.makeIdentity(ctrl,apply=True, t=1,r=1,s=1,n=0,pn=1)
             cmds.parentConstraint(ctrl,fkBones)
             ctrlList.append(ctrl)
-            if len(ctrlList) == 3:
-                cmds.parent(ctrlList[2],ctrlList[1])
-                cmds.parent(ctrlList[1],ctrlList[0])
-                del ctrlList[:]
-          
-        
-        
-        
-#fsds
+    for p in range(len(ctrlList)):      
+        if ctrlList[p] != ctrlList[-1]:
+            cmds.parent(ctrlList[p+1],ctrlList[p])
+    del ctrlList[:]
