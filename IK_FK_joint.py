@@ -1,7 +1,8 @@
 import maya.cmds as cmds
-
+import math 
 jointList=[];locators=[]
 jointsAmount=7
+
 def counter(): return len(cmds.ls("bonesGrp*")); 
 
 def getLocation():
@@ -9,19 +10,22 @@ def getLocation():
     temp=[]
     deliver=[]
     for x in locators:
-        print x
         cl=cmds.getAttr(x+".translate")[0]
         locations.append(cl)
     start=locations[0];end=locations[1]
-    for d in range(len(end)):
-        ref=end[d]/jointsAmount
-        for f in range(jointsAmount*3):
-            final=ref*f+start[d]       
-            temp.append(final)
+    #distance=math.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2+(end[2]-start[2])**2)
+    for h in range (jointsAmount ):
+        for d in range(len(end)):
+            if h==0:
+                ref=start[d]
+                temp.append(ref)
+            else:
+                ref=(((end[d]-start[d])/(jointsAmount-1))*(h))+start[d]
+                temp.append(ref)
             if len(temp) == 3:
-                print temp
-                deliver.append((temp[0],temp[1],temp[2]))
-                del temp[:]    
+                    print temp
+                    deliver.append((temp[0],temp[1],temp[2]))
+                    del temp[:]    
     return deliver
 
 def getNames():
@@ -71,6 +75,7 @@ def locator():
     start=create("start")[0]
     end=create("end")[0]
     cmds.setAttr(start+".translateX",5)
+    cmds.parent(end,start)
     locators.append(start)
     locators.append(end) 
     
