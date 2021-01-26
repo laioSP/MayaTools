@@ -1,8 +1,7 @@
 import maya.cmds as cmds
 import math 
 jointList=[];locators=[]
-jointsAmount=7
-
+jointsAmount=16
 def counter(): return len(cmds.ls("bonesGrp*")); 
 
 def getLocation():
@@ -75,7 +74,6 @@ def locator():
     start=create("start")[0]
     end=create("end")[0]
     cmds.setAttr(start+".translateX",5)
-    cmds.parent(end,start)
     locators.append(start)
     locators.append(end) 
     
@@ -103,7 +101,6 @@ def buildSlider(sliderWidth,sliderHeight,slideGroupName):
     cmds.setAttr(SliderName+".tz",-sliderWidth)
     sliderGroup=cmds.group(SliderName,ctrlFrameName,n=slideGroupName)
     cmds.makeIdentity(apply=True, t=1,r=1,s=1,n=0,pn=1)
-    
     cmds.transformLimits(SliderName,etz=(1,1),tz=(0, 2*sliderWidth))
             
     cmds.setAttr(SliderName+".tx",lock=True)
