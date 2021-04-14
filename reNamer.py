@@ -22,21 +22,26 @@ def reNamer(nameInput,amountInput,endInput):
     amount = cmds.intField(amountInput ,query=True, value=True)
     radioCol = cmds.iconTextRadioCollection(endInput, query=True, sl=True)
     objType = cmds.iconTextRadioButton(radioCol, query=True, label=True)
-    print name  
-    print amount
-    print objType
-    
-    counter=amount
+
+    counter=int(amount)
     tempList = []
-    for x in currentSelection:    
-        cmds.reorder(x,b=1)
-        temporary=cmds.rename(x,'tempX87234nljsdfnkbjsd')
-        tempList.append(temporary)
+    tempCounter=1
+    for x in currentSelection:
+        last=x.split('|')[-1]    
+        cmds.reorder(last,b=1)
+        print last
         
+        temporary=cmds.rename(last,'tempX87234nljsdfnkbjsd' + str(tempCounter))
+        tempList.append(temporary)
+        tempCounter += 1 
+    print tempList 
+    del currentSelection[:] 
     for x in tempList:
         newName = name + str(counter) + space + objType  
         cmds.rename(x,newName)
+        currentSelection.append(newName)
         counter += 1 
+    
 
     
 windowName='reNamer'
