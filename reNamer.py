@@ -1,4 +1,5 @@
 from maya import cmds
+
 riggingConvention = [['CRV',	'A curve not used as a path, spline IK or control (usually just visual)'],
 ['CTRL', 'An animator control'],
 ['PATH', 'A curve used as a path'],
@@ -139,27 +140,40 @@ def reNamer():
             cmds.reorder(tempList[x],b=1)
         cmds.rename(tempList[x],newName)
         counter += 1 
-    
-def t(currentSelection):
-    currentSelection = cmds.ls(sl=True)
-    print currentSelection
 
+def disableUI():
+    cmds.text(objectName, edit = True, enable = False)
+    cmds.textField(name,edit = True, enable = False)
+    cmds.text(countFrom, edit = True, enable = False)
+    cmds.intField(amount ,edit = True, enable = False)
+    
+def enableUI():
+    cmds.text(objectName, edit = True, enable = True)
+    cmds.textField(name,edit = True,enable = True)
+    cmds.text(countFrom, edit = True, enable = True)
+    cmds.intField(amount ,edit = True, enable = True)
+    
 if (cmds.window('reNamer',q=True,ex=True)):
-    cmds.deleteUI(windowName)
-cmds.window(windowName,rtf=True,s=True)    
-main=cmds.rowColumnLayout( nr=6 )
-cmds.text('name of the object')
+    cmds.deleteUI('reNamer')
+cmds.window('reNamer',rtf = True,s=True)    
+main = cmds.rowColumnLayout( nr=6 )
+objectName = cmds.text('name of the object')
 name = cmds.textField()
 
-countLayout=cmds.rowColumnLayout( nc =5, p = main )
+countLayout=cmds.rowColumnLayout( nc = 5, p = main )
 cmds.separator(p=countLayout,w=50,style='none' )
-cmds.text('count from', p = countLayout, w = 100)
+countFrom = cmds.text('count from', p = countLayout, w = 100)
 amount = cmds.intField(minValue = 0, p = countLayout, w = 30)
 cmds.separator(p=countLayout,w=20,style='none' )
 hierarchy = cmds.checkBox( label='order hierarchy', align='right', p = countLayout )
 
+cmds.iconTextRadioCollection()
+cmds.iconTextCheckBox( st='textOnly', l='switch extensions', w=120, bgc = [.4,.4,.4], onc = 'disableUI()', ofc = 'enableUI()' )
+
+
 extenssion = cmds.iconTextRadioCollection()
 cmds.iconTextRadioButton( st='textOnly', l='maintain extensions', w=120, sl=True, bgc = [.4,.4,.4] )
+
 form = cmds.formLayout(p=main)
 tabs = cmds.tabLayout(innerMarginWidth=5, innerMarginHeight=5)
 
@@ -186,7 +200,7 @@ cmds.setParent( '..' )
 extenssion = cmds.iconTextRadioCollection(extenssion,edit=True)
 
 cmds.tabLayout( tabs, edit = True, tabLabel = ((rigTab, 'rigging'), (ultilityTab, 'ultility'), (deformerTab, 'deformer'), (constraintTab, 'constraint')), bgc = [.3,.3,.3] )
-finalLayout=cmds.rowColumnLayout( nr = 1, p = main )
+finalLayout = cmds.rowColumnLayout( nr = 1, p = main )
 cmds.separator(p=finalLayout,w=80,style='none' )
 cmds.button(l = 'rename', p = finalLayout, c='reNamer()',w=200)
 
