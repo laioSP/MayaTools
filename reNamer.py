@@ -98,124 +98,147 @@ constraintConvention = [['AIMCON', 'aimConstraint'],
 ['GEOCON', 'geometryConstraint'],
 ['POPCON', 'pointOnPolyConstraint']]
 
-spacer='_'
+finalNameList = []
+exempleList = []
 
-def originalNames(currentSelection ):
-    OldNames = {}
-    for x in currentSelection:
-        last=x.split('|')[-1]
-        uniqueExtenssions=last.split('_')[-1]
-        OldNames[last.split('_')[0]] = last.split('_')[-1]
-        
-    return OldNames
-
-def temporaryNames(currentSelection):
-    tempList = []
-    for x in currentSelection:
-        last=x.split('|')[-1] 
-        temporary=cmds.rename(last, 'temp'+str(id(x)) )
-        tempList.append(temporary)
-    return tempList
-        
-def newName(newName, original, temp, amountInput, extensions):
-    counter = amountInput
-    for x in range(len(original)):
-        cmds.rename(temp[x], newName + str(counter) + spacer + extensions[x] )
-        counter += 1
-       
-def switchExtension(name, original, temp, extensions):
-    for x in range(len(original)):
-        cmds.rename(temp[x], name[x] + spacer + extensions[x] )
-
-def reName():
+def query():
     currentSelection = cmds.ls(sl=True)
     nameInput = cmds.textField(name,query=True,text=True)
+    firstSpace = cmds.textFieldGrp( space1 ,text = True, query = True )
+    secondSpace = cmds.textFieldGrp( space2 ,text = True, query = True )
     amountInput = cmds.intField(amount ,query=True, value=True)
     radioInput = cmds.iconTextRadioCollection(extenssion, query=True, sl=True)
     objType = cmds.iconTextRadioButton(radioInput, query=True, label=True)
     hierarchyInput = cmds.checkBox( hierarchy, query=True, value = True )
     switchInput = cmds.iconTextCheckBox( switch, query=True, value = True )
-    
-    if hierarchyInput :
+    return (nameInput, amountInput, objType, firstSpace, secondSpace, hierarchyInput, switchInput)
+
+def originalNames(currentSelection):
+    uniqueExtenssionsList = []
+    uniqueNamesList = []
+    space1 = query()[3]
+    space2 = query()[4]
+    for x in currentSelection:
+        last = x.split('|')[-1]
+        uniqueExtenssions = last.split(space2)[-1]
+        uniqueNames = last.split(space1)[0]
+        uniqueExtenssionsList.append(uniqueExtenssions)
+        uniqueNamesList.append(uniqueNames)
+    return uniqueNamesList, uniqueExtenssionsList
+
+def temporaryNames(currentSelection):
+    tempList = []
+    for x in currentSelection:
+        last=x.split('|')[-1] 
+        temporary=cmds.rename(last, 'temp' + str(id(x)) )
+        tempList.append(temporary)
+    return tempList
+
+def reName():
+    currentSelection = cmds.ls(sl=True)
+    hierarchyCheck = query()[5]
+    if hierarchyCheck :
         for sel in currentSelection:
             cmds.reorder(sel,b=1)
-            
-    getOriginal = originalNames(currentSelection)
+    newNames = newName()      
     temp = temporaryNames(currentSelection)
-           
-    if objType == 'maintain extensions':
-        extensionList = getOriginal.values()
-        
-    else:
-        extensionList = [ objType for i in range(len(getOriginal)) ]
+    for x in range(len(newNames)):
+        cmds.rename(temp[x], newNames[x] )
 
-    if switchInput:
-        newNamesList = getOriginal.keys()
-        switchExtension(newNamesList, getOriginal, temp, extensionList)
-
-    else:
-        newName(nameInput, getOriginal, temp, amountInput, extensionList)
-        
 def disableUI():
     cmds.text(objectName, edit = True, enable = False)
     cmds.textField(name,edit = True, enable = False)
     cmds.text(countFrom, edit = True, enable = False)
-    cmds.intField(amount ,edit = True, enable = False)
     cmds.iconTextRadioButton( maintain ,edit = True, enable = False)
     
 def enableUI():
     cmds.text(objectName, edit = True, enable = True)
     cmds.textField(name,edit = True,enable = True)
     cmds.text(countFrom, edit = True, enable = True)
-    cmds.intField(amount ,edit = True, enable = True)
     cmds.iconTextRadioButton( maintain ,edit = True, enable = True)
+
+def newName():
+    for x in exempleList:
+        cmds.deleteUI(x, control=True )
+    del exempleList [:]
+    del finalNameList [:]
+    currentSelection = cmds.ls(sl=True)
+    inputs = query()
+    userName = inputs[0]
+    amount = inputs[1]
+    extenssion = inputs[2]
+    space1 = inputs[3]
+    space2 = inputs[4]
+    switchCheck = inputs[6]
+    getOriginal = originalNames(currentSelection)
+
+    if extenssion == 'maintain extensions':
+        extensionList = getOriginal[1]
+    else:
+        extensionList = [ extenssion for x in range(len(currentSelection)) ]
+    if switchCheck:
+        newNamesList = getOriginal[0]        
+    else:
+        newNamesList = [ userName for x in range(len(currentSelection)) ]
+    counter = amount
+    for x in range(len(currentSelection)):
+        finalName = newNamesList[x] + space1 + str(counter) + space2 + extensionList[x]
+        exemple = cmds.text( l = finalName, p = uiList, w = 150 )
+        counter += 1
+        exempleList.append(exemple)
+        finalNameList.append(finalName)
+    return finalNameList
 
 if (cmds.window('reNamer',q=True,ex=True)):
     cmds.deleteUI('reNamer')
-cmds.window('reNamer',rtf = True,s=True)    
-main = cmds.rowColumnLayout( nr=6 )
+cmds.window('reNamer',rtf = True,s=True)
+magno = cmds.rowColumnLayout(nc = 2)
+uiList = cmds.rowColumnLayout(nc = 1, p = magno)  
+main = cmds.rowColumnLayout( nr=10, p = magno )
 objectName = cmds.text('name of the object')
-name = cmds.textField()
+name = cmds.textField( cc = 'newName()' )
+spaceTypes = cmds.rowColumnLayout( nc=2, p = main )
+space1 = cmds.textFieldGrp(tx='_',l='first spacer', cc = 'newName()', p=spaceTypes, w =160)
+space2 = cmds.textFieldGrp(tx='_',l='second spacer', cc = 'newName()', p=spaceTypes, w =160)
 
 countLayout = cmds.rowColumnLayout( nc = 4, p = main )
-
 countFrom = cmds.text('count from', p = countLayout, w = 100)
-amount = cmds.intField(minValue = 0, p = countLayout, w = 30)
+amount = cmds.intField(minValue = 0, v=1, p = countLayout, w = 30, cc = 'newName()',)
 cmds.separator(style='none', p = countLayout, w=30)
 hierarchy = cmds.checkBox( label='order hierarchy', align='right', p = countLayout )
 
 cmds.rowColumnLayout( nc = 3, p = main )
-
-switch = cmds.iconTextCheckBox( st='textOnly', l='switch extensions', w=150, bgc = [.4,.4,.4], onc = 'disableUI()', ofc = 'enableUI()' )
+switch = cmds.iconTextCheckBox( st='textOnly', l='switch extensions', w=150, bgc = [.4,.4,.4], onc = 'disableUI();newName()', ofc = 'enableUI()' )
 cmds.separator(style='none', w=60)
 extenssion = cmds.iconTextRadioCollection()
-maintain = cmds.iconTextRadioButton( st='textOnly', l='maintain extensions', w=150, sl=True, bgc = [.4,.4,.4] )
+maintain = cmds.iconTextRadioButton( st='textOnly', l='maintain extensions', w=150, sl=True, bgc = [.4,.4,.4],  onc = 'newName()' )
 form = cmds.formLayout(p=main)
 tabs = cmds.tabLayout(innerMarginWidth=5, innerMarginHeight=5)
 
-rigTab = cmds.rowColumnLayout( numberOfColumns=6)
+rigTab = cmds.rowColumnLayout( numberOfColumns=6 )
 for rig in riggingConvention:    
-    cmds.iconTextRadioButton( st='textOnly', l = rig[0], w=60, ann = rig[1], bgc = [.1,.8,.7] )
+    cmds.iconTextRadioButton( st='textOnly', l = rig[0], w=60, ann = rig[1], bgc = [.1,.8,.7], onc = 'newName()' )
 cmds.setParent( '..' )
 
-ultilityTab = cmds.rowColumnLayout( numberOfColumns=6)   
+ultilityTab = cmds.rowColumnLayout( numberOfColumns=6 )   
 for ultil in ultilityConvention:
-    cmds.iconTextRadioButton( st='textOnly', l=ultil[0], ann=ultil[1], w=60, bgc = [.1,.6,.7] )
+    cmds.iconTextRadioButton( st='textOnly', l=ultil[0], ann=ultil[1], w=60, bgc = [.1,.6,.7], onc = 'newName()' )
 cmds.setParent( '..' )  
 
-deformerTab = cmds.rowColumnLayout( numberOfColumns=6)
+deformerTab = cmds.rowColumnLayout( numberOfColumns=6 )
 for deform in deformerConvention:
-    cmds.iconTextRadioButton( st='textOnly', l=deform[0], ann=deform[1], w=60, bgc = [.1,.4,.7] )
+    cmds.iconTextRadioButton( st='textOnly', l=deform[0], ann=deform[1], w=60, bgc = [.1,.4,.7], onc = 'newName()' )
 cmds.setParent( '..' )  
 
-constraintTab = cmds.rowColumnLayout( numberOfColumns=6)
+constraintTab = cmds.rowColumnLayout( numberOfColumns=6 )
 for constraint in constraintConvention:
-    cmds.iconTextRadioButton( st='textOnly', l=constraint[0], ann=constraint[1], w=60, bgc = [.3,.3,.7] )
+    cmds.iconTextRadioButton( st='textOnly', l=constraint[0], ann=constraint[1], w=60, bgc = [.3,.3,.7], onc = 'newName()' )
 cmds.setParent( '..' ) 
 
 extenssion = cmds.iconTextRadioCollection(extenssion,edit=True)
 cmds.tabLayout( tabs, edit = True, tabLabel = ((rigTab, 'rigging'), (ultilityTab, 'ultility'), (deformerTab, 'deformer'), (constraintTab, 'constraint')), bgc = [.3,.3,.3] )
-finalLayout = cmds.rowColumnLayout( nr = 1, p = main )
+finalLayout = cmds.rowColumnLayout( nc = 3, p = main )
 cmds.separator(p=finalLayout,w=80,style='none' )
-cmds.button(l = 'rename', p = finalLayout, c='reName()',w=200)
+cmds.button(l = 'rename', p = finalLayout, c='reName()', w=200)
 cmds.showWindow()
+newName()
