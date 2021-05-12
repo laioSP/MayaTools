@@ -27,8 +27,6 @@ def verify(frame, point, objName):
     xMax,yMax, zMax, xMin, yMin, zMin = getBox
     getPosition = cmds.xform( objName+'.vtx['+str(point)+']', q=True, ws=True, t=True)
     xPos, yPos, zPos = getPosition
-    print getPosition
-    print getBox
     if xMin >= xPos:
         if xMax <= xPos:
             if yMin >= yPos:
@@ -36,19 +34,16 @@ def verify(frame, point, objName):
                     if zMin >= zPos:
                         if zMax <= zPos:
                             return True
-
 def collectVertices(frame):
     insideBB = []
     verticesRangeList = verticesRange()
-    
-    print verticesRangeList
     name = name=vertices[0].split('vtx')[0].split('.')[0]
-    for x in cages:
-        for localRange in verticesRangeList:
-            for y in localRange:
+    for localRange in verticesRangeList:
+        for y in localRange:
 
-                if verify(x, y, name):
-                    insideBB.append(name+'.vtx['+str(y)+']')
+            if verify(x, y, name):
+                insideBB.append(name+'.vtx['+str(y)+']')
     cmds.sets(insideBB)
-
-collectVertices(cages)
+    print 'done'
+for x in cages:
+    collectVertices(x)
