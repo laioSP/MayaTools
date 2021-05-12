@@ -43,7 +43,11 @@ def collectVertices(frame):
 
             if verify(x, y, name):
                 insideBB.append(name+'.vtx['+str(y)+']')
-    cmds.sets(insideBB)
-    print 'done'
+    setName=name.split('_')[1]+'Set_'
+    print setName
+    counter =  (len(cmds.ls(setName+'*')) / 2)+1
+    print counter
+    cmds.sets(insideBB, n=setName + str(counter))
+
 for x in cages:
     collectVertices(x)
