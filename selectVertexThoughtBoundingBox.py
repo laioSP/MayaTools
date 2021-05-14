@@ -1,31 +1,21 @@
 from maya import cmds
 cages=cmds.ls(sl=1)
-vertices=cmds.ls(sl=1)
+objList=cmds.ls(sl=1)
 
-def getName():
-    name=vertices[0].split('vtx')[0].split('.')[0]
-    return name
+def getVertices():
+    vertices=[]
+    for x in objList:
+        getVtx = cmds.ls(x+".vtx[*]")[0]
+        getRange = getVtx.split('[')[-1].split(']')[0].split(':')
+        for v in range(int(getRange[0]),int(getRange[1])):
+            vertices.append(x+".vtx["+str(v)+"]")
+    return vertices
     
-def verticesRange():
-    verticesRangeList = []
-    for x in vertices:
-        b=x.split('vtx')[-1]
-        c=b.split(']')[0].split('[')[-1].split(':')
-        last=c[-1]
-        first=c[0]
-
-        if first != last:
-            verticesRangeList.append( range( int(first), int(last)+1))
-        else:
-             verticesRangeList.append([int(first)])
-                
-    return verticesRangeList     
-
-def verify(frame, point, objName):
+def verify(frame, point):
 
     getBox = cmds.exactWorldBoundingBox( frame)
     xMax,yMax, zMax, xMin, yMin, zMin = getBox
-    getPosition = cmds.xform( objName+'.vtx['+str(point)+']', q=True, ws=True, t=True)
+    getPosition = cmds.xform( point, q=True, ws=True, t=True)
     xPos, yPos, zPos = getPosition
     if xMin >= xPos:
         if xMax <= xPos:
@@ -33,23 +23,83 @@ def verify(frame, point, objName):
                 if yMax <= yPos:
                     if zMin >= zPos:
                         if zMax <= zPos:
-                            return True
-def collectVertices(frame):
-    insideBB = []
-    verticesRangeList = verticesRange()
-    name = name=vertices[0].split('vtx')[0].split('.')[0]
-    for localRange in verticesRangeList:
-        for y in localRange:
+                            return frame
 
-            if verify(x, y, name):
-                insideBB.append(name+'.vtx['+str(y)+']')
-    setName=name.split('_')[1]+'Set_'
-    counter =  (len(cmds.ls(setName+'*')) / 2)+1
-    print counter
-    if counter < 10:
-        cmds.sets(insideBB, n=setName + '0' + str(counter))
-    else:
-        cmds.sets(insideBB, n=setName + str(counter))
+def collectVertices():
+    vertices = getVertices()
+    for frame in cages:
+        for vertice in vertices:
+            Filter = verify(frame, vertice)
+            if Filter:
+                setName = Filter+'_set_'
+                counter = (len(cmds.ls(setName+'*')) / 2)+1
+                if counter < 10:
+                    counter = '0' + str(counter)
+                else:
+                    counter = str(counter)
+                print counter                   
+                if cmds.ls(setName + counter):
+                    cmds.sets(vertice, add=setName + str(counter))
+                else:    
+                    cmds.sets(vertice, n=setName + counter)
 
-for x in cages:
-    collectVertices(x)
+for x in objList:
+    print x
+    getVtx = cmds.ls(x+".vtx[*]")[0]
+    getRange = getVtx.split('[')[-1].split(']')[0].split(':')
+    for v in range(int(getRange[0]),int(getRange[1])):
+        vertices.append(x+".vtx["+str(v)+"]")
+
+collectVertices()from maya import cmds
+cages=cmds.ls(sl=1)
+objList=cmds.ls(sl=1)
+
+def getVertices():
+    vertices=[]
+    for x in objList:
+        getVtx = cmds.ls(x+".vtx[*]")[0]
+        getRange = getVtx.split('[')[-1].split(']')[0].split(':')
+        for v in range(int(getRange[0]),int(getRange[1])):
+            vertices.append(x+".vtx["+str(v)+"]")
+    return vertices
+    
+def verify(frame, point):
+
+    getBox = cmds.exactWorldBoundingBox( frame)
+    xMax,yMax, zMax, xMin, yMin, zMin = getBox
+    getPosition = cmds.xform( point, q=True, ws=True, t=True)
+    xPos, yPos, zPos = getPosition
+    if xMin >= xPos:
+        if xMax <= xPos:
+            if yMin >= yPos:
+                if yMax <= yPos:
+                    if zMin >= zPos:
+                        if zMax <= zPos:
+                            return frame
+
+def collectVertices():
+    vertices = getVertices()
+    for frame in cages:
+        for vertice in vertices:
+            Filter = verify(frame, vertice)
+            if Filter:
+                setName = Filter+'_set_'
+                counter = (len(cmds.ls(setName+'*')) / 2)+1
+                if counter < 10:
+                    counter = '0' + str(counter)
+                else:
+                    counter = str(counter)
+                print counter                   
+                if cmds.ls(setName + counter):
+                    cmds.sets(vertice, add=setName + str(counter))
+                else:    
+                    cmds.sets(vertice, n=setName + counter)
+
+for x in objList:
+    print x
+    getVtx = cmds.ls(x+".vtx[*]")[0]
+    getRange = getVtx.split('[')[-1].split(']')[0].split(':')
+    for v in range(int(getRange[0]),int(getRange[1])):
+        vertices.append(x+".vtx["+str(v)+"]")
+
+collectVertices()
