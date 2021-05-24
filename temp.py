@@ -1,8 +1,8 @@
 from maya import cmds
 import pymel.core as pm
 
-sl=cmds.ls(sl=1)
-cmds.listRelatives(selected_items[0], shapes=True)
+driven = 'joint1' 
+driver = cmds.ls(sl=1)[0]
 shape=pm.selected()[0].split('.')[0]
 
 
@@ -10,8 +10,7 @@ def getRange(currentSelection):
     list = currentSelection.split('[')[-1].split(']')[0].split(':')
     return range(int(list[0]), int(list[1])+1)
 
-def getPositions(rootPosition):
-   
+def getPositions(rootPosition):   
     xPos=[]; yPos=[]; zPos=[]
     for x in set(cmds.listAttr(rootPosition)) - set(cmds.listAttr(rootPosition, s=1)):
         fullAttr = cmds.getAttr(shape + '.' + x)[0]
@@ -20,6 +19,7 @@ def getPositions(rootPosition):
 
 driven = 'joint1' 
 driver = cmds.ls(sl=1)[0]
+
 def match(driven, driver):
     driverPos = getPositions(driver)
     
