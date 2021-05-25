@@ -14,10 +14,13 @@ def getPositions(rootPosition):
         xPos.append(fullAttr[0]); yPos.append(fullAttr[1]); zPos.append(fullAttr[2])
     return (sum(xPos)/len(xPos), sum(yPos)/len(yPos), sum(zPos)/len(zPos))
 
+
 def match(driver):
-    print driver
-    print getPositions(driver)
     cmds.select(cl=1)
-    cmds.joint( n=shape.split('Shape')[0]+'_JNT', p=getPositions(driver) )
-    
+    if cmds.objectType(driver) == 'mesh':
+        cmds.joint( n=shape.split('Shape')[0]+'_JNT', p=getPositions(driver) )
+    else:
+        J=cmds.joint( n=driver+'_JNT')
+        cmds.matchTransform(J, driver)
+   
 match(cmds.ls(sl=1)[0])
