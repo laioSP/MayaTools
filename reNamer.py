@@ -35,7 +35,8 @@ riggingConvention = [['CRV',	'A curve not used as a path, spline IK or control (
 ['IK', ''],
 ['EFF',	''],
 ['DRVKEY',	'An f-curve used as a driven key in a rig.'],
-['PSI',	'A node used to interpolate between PSDs']]
+['PSI',	'A node used to interpolate between PSDs'],
+['DRV',	'']]
 
 ultilityConvention = [['MULT', 'multiplyDivide(Multiply mode)'],
 ['DIV', 'multiplyDivide(Divide mode)'],
@@ -242,3 +243,11 @@ cmds.separator(p=finalLayout,w=80,style='none' )
 cmds.button(l = 'rename', p = finalLayout, c='reName()', w=200)
 cmds.showWindow()
 newName()
+
+
+
+
+
+
+
+
