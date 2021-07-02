@@ -17,7 +17,14 @@ def createPin(name):
     cmds.delete(cmds.ls('pinHead',dag=True)[0])
     return pointer
 
-def changeCTRLsize(ctrl, value):
+def rotateShape(ctrl, X, Y, Z):
+    vertexList = []
+    for x in cmds.ls(ctrl,dag=1)[1:]:
+        vertexList.append(x + '.cv[*]')       
+    cmds.rotate(X, Y, Z,vertexList)      
+    return ctrl
+
+def shapeSize(ctrl, value):
     vertexList = []
     for x in cmds.ls(ctrl,dag=1)[1:]:
         vertexList.append(x + '.cv[*]')       
@@ -43,8 +50,10 @@ def createGroup(name,function,parented):
 def createCTRL(name, junction):
     radius = cmds.getAttr(junction+'.radius')
     main = cmds.circle(n=name+'_CTRL', r=radius)
-    sub = cmds.circle(n=name+'Sub_CTRL', r=radius*0.7)
+    cmds.addAttr(k=True, ln='subCtrl', at='bool')
+    sub = cmds.circle(n=name[0]+'Sub_CTRL', r=radius*0.7)
     cmds.parent(sub, main)
+    cmds.connectAttr(main[0]+'.subCtrl',sub[0]+'.visibility')
     zero = createGroup(name,'ZERO',main)
     link = createGroup(name,'LINK',zero)
     cmds.matchTransform(zero, junction)
