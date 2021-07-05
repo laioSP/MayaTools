@@ -17,7 +17,7 @@ def getVertices():
     for x in objList:
         getVtx = cmds.ls(x+".vtx[*]")[0]
         getRange = getVtx.split('[')[-1].split(']')[0].split(':')
-        for v in range(int(getRange[0]),int(getRange[1])):
+        for v in range(int(getRange[0]),int(getRange[1])+1):
             vertices.append(x+".vtx["+str(v)+"]")
     return vertices
 
